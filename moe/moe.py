@@ -57,7 +57,6 @@ class MixtureOfExperts(nn.Module):
         # Permute expert outputs for batch-first
         expert_outputs = expert_outputs.permute(1, 0, 2)
         # Shape: [batch_size, num_experts, output_dim]
-        print(expert_outputs.shape)
 
         expert_outputs = project_to_unique_subspaces(
             expert_outputs,

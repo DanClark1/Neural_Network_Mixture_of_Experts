@@ -54,7 +54,7 @@ def main():
     )
 
     # Training loop
-    num_epochs = 50
+    num_epochs = 100
     train_losses = []
     val_losses = []
     expert_utilization_history = []
@@ -140,7 +140,7 @@ def main():
     predictions, expert_assignments = test_model_inference(model, test_x)
     print("\nTest Predictions:")
     print("Input Shape:", test_x.shape)
-    print("Output Shape:", predictions.shape)
+    #print("Output Shape:", predictions.shape)
     print("Expert Assignments:", expert_assignments.numpy())
 
 if __name__ == "__main__":
