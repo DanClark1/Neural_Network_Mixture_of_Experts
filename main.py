@@ -87,7 +87,7 @@ def main():
             print(f"Train Loss: {train_loss:.4f}")
             print(f"Val Loss: {val_loss:.4f}")
             print("Expert Utilization:", 
-                  model.get_expert_utilization_rates().numpy().round(3))
+                  model.get_expert_utilization_rates().cpu().numpy().round(3))
             print("-" * 50)
 
     # Plotting utilities
@@ -122,12 +122,17 @@ def main():
     # Test model inference
     def test_model_inference(model, x):
         model.eval()
+        # move inputs to same device as model
+        device = next(model.parameters()).device
+        x = x.to(device)
         with torch.no_grad():
             output = model(x)
             # Get expert assignments
             gate_weights = model.gate(x)
             # Get expert with highest weight for each sample
             primary_experts = gate_weights.argmax(dim=1)
+        # move assignments back to CPU for numpy()
+        primary_experts = primary_experts.cpu()
         return output, primary_experts
 
     # Test on some samples
