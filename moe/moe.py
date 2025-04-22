@@ -64,9 +64,11 @@ class MixtureOfExperts(nn.Module):
         #     self.projection_martrix
         # )
 
-        cosine_loss = calculate_cosine_loss(expert_outputs)
+        #cosine_loss = calculate_cosine_loss(expert_outputs)
 
-        #expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+
+        cosine_loss = 0 
         
         # Weighted sum of expert outputs
         combined_output = (expert_outputs * gate_weights).sum(dim=1)
