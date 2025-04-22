@@ -23,8 +23,6 @@ class MixtureOfExperts(nn.Module):
         self.total_forward_passes = 0
     
     def forward(self, x):
-        print(f"x device: {x.device}")
-        print(f"Layer device: {self.device}")
 
         batch_size = x.shape[0]
         

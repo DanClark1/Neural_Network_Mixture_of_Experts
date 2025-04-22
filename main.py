@@ -123,7 +123,7 @@ def main():
     def test_model_inference(model, x):
         model.eval()
         # move inputs to same device as model
-        device = next(model.parameters()).device
+        device = 'cuda'
         x = x.to(device)
         with torch.no_grad():
             output = model(x)
