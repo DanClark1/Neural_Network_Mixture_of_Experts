@@ -21,6 +21,7 @@ class MixtureOfExperts(nn.Module):
         # Initialize tracking metrics
         self.register_buffer('expert_utilization', torch.zeros(num_experts))
         self.total_forward_passes = 0
+        self.projection_martrix = None
     
     def forward(self, x):
 
@@ -29,7 +30,13 @@ class MixtureOfExperts(nn.Module):
         # Get expert outputs
         expert_outputs = torch.stack([expert(x) for expert in self.experts])
         # Shape: [num_experts, batch_size, output_dim]
-        
+
+
+        if self.projection_martrix is None:
+            self.projection_martrix = torch.nn.Parameter(
+                torch.zeros(x.shape[2], x.shape[2])
+            )
+            torch.nn.init.kaiming_uniform_(self.projection_martrix, a=-1, b=1)
         # Get gating weights
         gate_weights = self.gate(x)
         # Shape: [batch_size, num_experts]
@@ -47,6 +54,11 @@ class MixtureOfExperts(nn.Module):
         # Permute expert outputs for batch-first
         expert_outputs = expert_outputs.permute(1, 0, 2)
         # Shape: [batch_size, num_experts, output_dim]
+
+        expert_outputs = project_to_unique_subspaces(
+            expert_outputs,
+            self.projection_martrix
+        )
         
         # Weighted sum of expert outputs
         combined_output = (expert_outputs * gate_weights).sum(dim=1)
@@ -72,3 +84,36 @@ class MixtureOfExperts(nn.Module):
             reduction='batchmean'
         )
         return load_balancing_loss
+    
+
+
+def project_to_unique_subspaces(
+    U: torch.Tensor,
+    A: torch.Tensor
+) -> torch.Tensor:
+    """
+    Args:
+      U: (batch, K, dim)                — MoE outputs
+      A: (dim, dim)                     — unconstrained parameter
+    Returns:
+      V: (batch, K, dim)                — each expert in its own orthogonal subspace
+    """
+    batch, K, dim = U.shape
+    base, rem = divmod(dim, K)      # e.g. for dim=100, K=6 → base=16, rem=4
+    # first `rem` experts get (base+1) dims, the rest get base dims
+    sizes = [(base + 1) if i < rem else base for i in range(K)]
+    starts = [0] + list(torch.cumsum(torch.tensor(sizes), 0).tolist())
+
+    # build Cayley Q as before
+    S = A - A.t()
+    I = torch.eye(dim, device=A.device, dtype=A.dtype)
+    Q = torch.linalg.solve(I - S, I + S)  # (dim, dim)
+
+    V = torch.zeros_like(U)
+    for i in range(K):
+        s, e = starts[i], starts[i+1]
+        Bi = Q[:, s:e]           # shape (dim, sizes[i])
+        ui = U[:, i]             # shape (batch, dim)
+        coords = ui @ Bi         # → (batch, sizes[i])
+        V[:, i] = coords @ Bi.t()# → (batch, dim)
+    return V

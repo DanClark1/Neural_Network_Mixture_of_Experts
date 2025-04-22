@@ -34,8 +34,6 @@ class Expert(nn.Module):
             h = F.relu(h)
             if h.shape == h_prev.shape:  # Add skip connection if shapes match
                 h = h + h_prev
-
-        print(f"Expert forward pass: {h.shape}")
         
         # Output layer
         return self.layers[-1](h)
