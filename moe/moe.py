@@ -59,14 +59,14 @@ class MixtureOfExperts(nn.Module):
         # Shape: [batch_size, num_experts, output_dim]
         print(expert_outputs.shape)
 
-        # expert_outputs = project_to_unique_subspaces(
-        #     expert_outputs,
-        #     self.projection_martrix
-        # )
+        expert_outputs = project_to_unique_subspaces(
+            expert_outputs,
+            self.projection_martrix
+        )
 
         #cosine_loss = calculate_cosine_loss(expert_outputs)
 
-        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+        #expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
 
         cosine_loss = 0 
         
