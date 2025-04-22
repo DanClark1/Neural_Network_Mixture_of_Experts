@@ -38,7 +38,7 @@ def main():
     model = MixtureOfExperts(
         input_dim=10,           # Input dimension
         hidden_dims=[64, 64],   # Hidden layers in each expert
-        output_dim=1,           # Output dimension
+        output_dim=64,           # Output dimension
         num_experts=4,          # Number of experts
         gating_hidden_dim=32    # Hidden dim for gating network
     ).to('cuda')

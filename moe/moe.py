@@ -15,6 +15,8 @@ class MixtureOfExperts(nn.Module):
             Expert(input_dim, hidden_dims, output_dim) 
             for _ in range(num_experts)
         ])
+
+        self.output_layer = nn.Linear(output_dim, 1)
         
         # Create gating network
         self.gate = GatingNetwork(input_dim, gating_hidden_dim, num_experts)
@@ -69,8 +71,11 @@ class MixtureOfExperts(nn.Module):
         # Weighted sum of expert outputs
         combined_output = (expert_outputs * gate_weights).sum(dim=1)
         # Shape: [batch_size, output_dim]
+
+        # Apply final output layer
+        final_output = self.output_layer(combined_output)
         
-        return combined_output, cosine_loss
+        return final_output, cosine_loss
     
     def get_expert_utilization_rates(self):
         if self.total_forward_passes == 0:
