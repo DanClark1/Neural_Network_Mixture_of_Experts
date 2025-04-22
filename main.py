@@ -7,6 +7,7 @@ from moe import MixtureOfExperts, MoETrainer
 import wandb
 
 def main():
+    print('hello')
     wandb.init(project='simple_moe')
     # Create some synthetic data
     def generate_synthetic_data(num_samples=1000):
@@ -24,8 +25,8 @@ def main():
         return X, y.unsqueeze(1)  # Add output dimension
 
     # Generate data
-    X_train, y_train = generate_synthetic_data(1000)
-    X_val, y_val = generate_synthetic_data(200)
+    X_train, y_train = generate_synthetic_data(1000).to('cuda')
+    X_val, y_val = generate_synthetic_data(200).to('cuda')
 
     # Create data loaders
     train_dataset = TensorDataset(X_train, y_train)
