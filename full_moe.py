@@ -132,6 +132,10 @@ class MoETrainer:
         self.load_balance_coef = load_balance_coef
         
     def train_step(self, x, y):
+        # ensure x and y are on the same device as the model
+        device = next(self.model.parameters()).device
+        x, y = x.to(device), y.to(device)
+
         self.optimizer.zero_grad()
         
         # Forward pass
@@ -165,8 +169,11 @@ class MoETrainer:
         total_loss = 0
         num_batches = 0
         
+        device = next(self.model.parameters()).device
         with torch.no_grad():
             for x, y in val_loader:
+                # move batch to GPU if needed
+                x, y = x.to(device), y.to(device)
                 outputs = self.model(x)
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
