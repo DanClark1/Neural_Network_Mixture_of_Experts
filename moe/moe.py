@@ -56,10 +56,12 @@ class MixtureOfExperts(nn.Module):
         expert_outputs = expert_outputs.permute(1, 0, 2)
         # Shape: [batch_size, num_experts, output_dim]
 
-        expert_outputs = project_to_unique_subspaces(
-            expert_outputs,
-            self.projection_martrix
-        )
+        # expert_outputs = project_to_unique_subspaces(
+        #     expert_outputs,
+        #     self.projection_martrix
+        # )
+
+        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
         
         # Weighted sum of expert outputs
         combined_output = (expert_outputs * gate_weights).sum(dim=1)
@@ -118,3 +120,33 @@ def project_to_unique_subspaces(
         coords = ui @ Bi         # → (batch, sizes[i])
         V[:, i] = coords @ Bi.t()# → (batch, dim)
     return V
+
+
+
+def gram_schmidt_orthonormalize(U: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+    """
+    Differentiable Gram–Schmidt on U of shape (batch, K, dim).
+    Avoids in-place ops by cloning and stacking.
+    """
+    batch, K, dim = U.shape
+    orthonorms = []
+
+    for i in range(K):
+        # clone the slice so we don't modify a view of U
+        v = U[:, i].clone()              # (batch, dim)
+
+        # subtract projections onto all previous orthonormal vectors
+        for vj in orthonorms:            # each vj is (batch, dim)
+            # ⟨v, vj⟩ / (⟨vj, vj⟩ + eps), shape (batch,1)
+            coeff = (v * vj).sum(dim=1, keepdim=True) \
+                  / (vj.pow(2).sum(dim=1, keepdim=True) + eps)
+            v = v - coeff * vj           # safe: v is a fresh Tensor
+
+        # normalize to unit length
+        norm = v.norm(dim=1, keepdim=True).clamp_min(eps)
+        v = v / norm
+
+        orthonorms.append(v)
+
+    # stack back into (batch, K, dim)
+    return torch.stack(orthonorms, dim=1)
