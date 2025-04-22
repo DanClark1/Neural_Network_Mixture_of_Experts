@@ -61,13 +61,15 @@ class MixtureOfExperts(nn.Module):
         #     self.projection_martrix
         # )
 
-        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+        cosine_loss = calculate_cosine_loss(expert_outputs)
+
+        #expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
         
         # Weighted sum of expert outputs
         combined_output = (expert_outputs * gate_weights).sum(dim=1)
         # Shape: [batch_size, output_dim]
         
-        return combined_output
+        return combined_output, cosine_loss
     
     def get_expert_utilization_rates(self):
         if self.total_forward_passes == 0:
@@ -150,3 +152,32 @@ def gram_schmidt_orthonormalize(U: torch.Tensor, eps: float = 1e-6) -> torch.Ten
 
     # stack back into (batch, K, dim)
     return torch.stack(orthonorms, dim=1)
+
+
+
+def calculate_cosine_loss(moe_outp):
+        '''
+        moe output has shape (batch_positions, top_k, dim)
+        '''
+        # Normalize the tokens along the feature dimension:
+        norm_tokens = F.normalize(moe_outp, p=2, dim=-1)  # shape: (batch_positions, top_k, dim)
+        
+        # Compute cosine similarity matrix for each sample:
+        # This produces a (batch_positions, top_k, top_k) tensor where each [i] contains the pairwise similarities.
+        cos_sim_matrix = torch.abs(torch.bmm(norm_tokens, norm_tokens.transpose(1, 2)))
+        
+        # Create a mask to remove self-similarities (the diagonal elements for each sample)
+        top_k = moe_outp.size(1)
+        diag_mask = torch.eye(top_k, device=moe_outp.device, dtype=torch.bool).unsqueeze(0)
+        diag_mask = diag_mask.expand_as(cos_sim_matrix)
+        cos_sim_matrix = cos_sim_matrix.masked_fill(diag_mask, 0)
+        
+        # Calculate the mean cosine similarity loss per sample.
+        # Since each sample has top_k tokens, there are top_k * (top_k - 1) off-diagonals.
+        # Sum across the top_k x top_k matrix (which now contains zeros on the diagonal), then average.
+        cosine_loss = cos_sim_matrix.sum(dim=(1, 2)) / (top_k * (top_k - 1))
+        
+        # Finally, take the mean over all batch positions.
+        cosine_loss = cosine_loss.mean()
+        
+        return cosine_loss

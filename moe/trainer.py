@@ -13,7 +13,7 @@ class MoETrainer:
         x = x.to('cuda')
         y = y.to('cuda')
         # Forward pass
-        outputs = self.model(x)
+        outputs, cosine_loss = self.model(x)
         gate_weights = self.model.gate(x)
         
         # Compute losses
@@ -21,7 +21,7 @@ class MoETrainer:
         load_balance_loss = self.model.compute_load_balancing_loss(gate_weights)
         
         # Combined loss
-        total_loss = task_loss + self.load_balance_coef * load_balance_loss
+        total_loss = task_loss + self.load_balance_coef * load_balance_loss + cosine_loss * 0.1
         
         # Backward pass
         total_loss.backward()
@@ -47,7 +47,7 @@ class MoETrainer:
             for x, y in val_loader:
                 x = x.to('cuda')
                 y = y.to('cuda')
-                outputs = self.model(x)
+                outputs, _ = self.model(x)
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1
