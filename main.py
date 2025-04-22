@@ -44,7 +44,7 @@ def main():
     ).to('cuda')
 
     # Initialize trainer
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001).to('cuda')
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     task_loss_fn = nn.MSELoss().to('cuda')
     trainer = MoETrainer(
         model=model,
