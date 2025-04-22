@@ -65,8 +65,9 @@ class MixtureOfExperts(nn.Module):
 
         #cosine_loss = calculate_cosine_loss(expert_outputs)
 
-        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
-
+        projected_expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+        projected_expert_outputs[:, -1, :] = expert_outputs[:, -1, :]
+        expert_outputs = projected_expert_outputs
         cosine_loss = 0 
         
         # Weighted sum of expert outputs
