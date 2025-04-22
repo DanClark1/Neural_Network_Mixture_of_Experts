@@ -6,7 +6,16 @@ import numpy as np
 from moe import MixtureOfExperts, MoETrainer
 import wandb
 
+
 def main():
+    seed = 0
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.random.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
     print('hello')
     wandb.init(project='simple_moe')
     # Create some synthetic data
