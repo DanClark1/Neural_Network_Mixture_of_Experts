@@ -4,8 +4,10 @@ from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
 import numpy as np
 from moe import MixtureOfExperts, MoETrainer
+import wandb
 
 def main():
+    wandb.init(project='simple_moe')
     # Create some synthetic data
     def generate_synthetic_data(num_samples=1000):
         # Create data with different patterns for experts to specialize in
@@ -38,7 +40,7 @@ def main():
         output_dim=1,           # Output dimension
         num_experts=4,          # Number of experts
         gating_hidden_dim=32    # Hidden dim for gating network
-    )
+    ).to('cuda')
 
     # Initialize trainer
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -66,10 +68,12 @@ def main():
         # Record training loss
         train_loss = sum(epoch_losses) / len(epoch_losses)
         train_losses.append(train_loss)
+        wandb.log({"train_loss": train_loss}, step=epoch, commit=False)
         
         # Validation
         val_loss = trainer.evaluate(val_loader)
         val_losses.append(val_loss)
+        wandb.log({"val_loss": val_loss}, step=epoch)
         
         # Record expert utilization
         expert_utilization_history.append(
