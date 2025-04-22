@@ -36,7 +36,7 @@ class MixtureOfExperts(nn.Module):
         if self.projection_martrix is None:
             self.projection_martrix = torch.nn.Parameter(
                 torch.zeros(expert_outputs.shape[2], expert_outputs.shape[2])
-            )
+            ).to('cuda')
             torch.nn.init.kaiming_uniform_(self.projection_martrix, a=math.sqrt(5))
         # Get gating weights
         gate_weights = self.gate(x)
