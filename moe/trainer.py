@@ -11,6 +11,7 @@ class MoETrainer:
     def train_step(self, x, y):
         self.optimizer.zero_grad()
         x = x.to('cuda')
+        y = y.to('cuda')
         # Forward pass
         outputs = self.model(x)
         gate_weights = self.model.gate(x)
