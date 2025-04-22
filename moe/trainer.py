@@ -45,6 +45,8 @@ class MoETrainer:
         
         with torch.no_grad():
             for x, y in val_loader:
+                x = x.to('cuda')
+                y = y.to('cuda')
                 outputs = self.model(x)
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
