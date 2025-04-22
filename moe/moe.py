@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .expert import Expert
 from .gating import GatingNetwork
+import math
 
 class MixtureOfExperts(nn.Module):
     def __init__(self, input_dim, hidden_dims, output_dim, num_experts, gating_hidden_dim):
@@ -36,7 +37,7 @@ class MixtureOfExperts(nn.Module):
             self.projection_martrix = torch.nn.Parameter(
                 torch.zeros(expert_outputs.shape[2], expert_outputs.shape[2])
             )
-            torch.nn.init.kaiming_uniform_(self.projection_martrix, a=-1, b=1)
+            torch.nn.init.kaiming_uniform_(self.projection_martrix, a=math.sqrt(5))
         # Get gating weights
         gate_weights = self.gate(x)
         # Shape: [batch_size, num_experts]
