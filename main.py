@@ -8,7 +8,7 @@ import wandb
 
 
 def main():
-    seed = 1
+    seed = 2
     torch.manual_seed(seed)
     np.random.seed(seed)
     torch.random.manual_seed(seed)
