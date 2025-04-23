@@ -39,6 +39,7 @@ class MixtureOfExperts(nn.Module):
             self.net = nn.Sequential(
                 nn.Linear(x.shape[-1], expert_outputs.shape[2]**2),
             ).to('cuda')
+            self.net.requires_grad = False
         # Get gating weights
         gate_weights = self.gate(x)
         # Shape: [batch_size, num_experts]
