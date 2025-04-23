@@ -161,7 +161,7 @@ def main(seed=2):
 
 if __name__ == "__main__":
     loss = 0
-    for i in range(10):
+    for i in range(3):
         loss += main(i)
 
-    print("Average Test Loss:", loss / 10)
+    print("Average Test Loss:", loss / 3)
