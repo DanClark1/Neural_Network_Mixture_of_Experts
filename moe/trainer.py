@@ -68,7 +68,7 @@ class MoETrainer:
             os.makedirs(out_dir, exist_ok=True)
 
             # 2) center and SVD
-            Zc = Z - Z.mean(axis=0, keepdims=True)
+            Zc = Z_full - Z_full.mean(axis=0, keepdims=True)
             U, S, Vt = np.linalg.svd(Zc, full_matrices=False)
 
             # 3) scree plot
