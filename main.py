@@ -63,7 +63,7 @@ def main():
     )
 
     # Training loop
-    num_epochs = 100
+    num_epochs = 200
     train_losses = []
     val_losses = []
     expert_utilization_history = []
