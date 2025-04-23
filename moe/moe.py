@@ -41,9 +41,10 @@ class MixtureOfExperts(nn.Module):
                 nn.ReLU(),
                 nn.Linear(32, expert_outputs.shape[2]**2)
             ).to('cuda')
-        
-        torch.nn.init.xavier_uniform(self.net)
+            for param in self.net.parameters():
+                param.requires_grad = False
 
+    
 
         
         # Get gating weights
