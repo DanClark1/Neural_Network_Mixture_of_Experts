@@ -59,15 +59,15 @@ class MixtureOfExperts(nn.Module):
         expert_outputs = expert_outputs.permute(1, 0, 2)
         # Shape: [batch_size, num_experts, output_dim]
 
-        projection_matrix = self.net(x).view(batch_size, expert_outputs.shape[2], expert_outputs.shape[2])
-        expert_outputs = batch_project_to_unique_subspaces(
-            expert_outputs,
-            projection_matrix
-        )
+        # projection_matrix = self.net(x).view(batch_size, expert_outputs.shape[2], expert_outputs.shape[2])
+        # expert_outputs = batch_project_to_unique_subspaces(
+        #     expert_outputs,
+        #     projection_matrix
+        # )
 
         #cosine_loss = calculate_cosine_loss(expert_outputs)
 
-        # projected_expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
         # projected_expert_outputs[:, -1, :] = expert_outputs[:, -1, :]
         # expert_outputs = projected_expert_outputs
         cosine_loss = 0 
