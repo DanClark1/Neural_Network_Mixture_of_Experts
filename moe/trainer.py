@@ -61,7 +61,8 @@ class MoETrainer:
                 num_batches += 1
 
         if record:
-            Z_full = torch.cat(Z_full, dim=0).cpu().numpy()
+            #Z_full = torch.cat(Z_full, dim=0).cpu().numpy()
+            Z_full  = Z.cpu().numpy()
             out_root = '/app/save_dir/'
             ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             out_dir = os.path.join(out_root, ts)

@@ -82,10 +82,10 @@ class MixtureOfExperts(nn.Module):
 
 
 
-        expert_outputs = project_to_unique_subspaces(
-            expert_outputs,
-            self.projection_martrix
-        )
+        # expert_outputs = project_to_unique_subspaces(
+        #     expert_outputs,
+        #     self.projection_martrix
+        # )
 
         #cosine_loss = calculate_cosine_loss(expert_outputs)
 
