@@ -35,14 +35,14 @@ class MixtureOfExperts(nn.Module):
         # Shape: [num_experts, batch_size, output_dim]
 
 
-        if self.net is None:
+        if True:
             self.net = nn.Sequential(
                 nn.Linear(x.shape[-1], 32),
                 nn.ReLU(),
                 nn.Linear(32, expert_outputs.shape[2]**2)
             ).to('cuda')
-            for param in self.net.parameters():
-                param.requires_grad = False
+            # for param in self.net.parameters():
+            #     param.requires_grad = False
 
     
 
