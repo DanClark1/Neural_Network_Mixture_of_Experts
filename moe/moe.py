@@ -36,10 +36,11 @@ class MixtureOfExperts(nn.Module):
 
 
         if self.projection_martrix is None:
-            self.projection_martrix = torch.nn.Parameter(
-                torch.zeros(expert_outputs.shape[2], expert_outputs.shape[2])
+            self.net = nn.Sequential(
+                nn.Linear(x.shape[-1], 32),
+                nn.ReLU(),
+                nn.Linear(32, expert_outputs.shape[2]**2),
             ).to('cuda')
-            torch.nn.init.kaiming_uniform_(self.projection_martrix, a=math.sqrt(5))
         # Get gating weights
         gate_weights = self.gate(x)
         # Shape: [batch_size, num_experts]
@@ -58,12 +59,13 @@ class MixtureOfExperts(nn.Module):
         expert_outputs = expert_outputs.permute(1, 0, 2)
         # Shape: [batch_size, num_experts, output_dim]
 
-        expert_outputs = project_to_unique_subspaces(
+        projection_matrix = self.net(x).view(batch_size, self.dim, self.dim)
+        expert_outputs = batch_project_to_unique_subspaces(
             expert_outputs,
-            self.projection_martrix
+            projection_matrix
         )
 
-        cosine_loss = calculate_cosine_loss(expert_outputs)
+        #cosine_loss = calculate_cosine_loss(expert_outputs)
 
         # projected_expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
         # projected_expert_outputs[:, -1, :] = expert_outputs[:, -1, :]
@@ -98,6 +100,32 @@ class MixtureOfExperts(nn.Module):
         )
         return load_balancing_loss
     
+
+def batch_project_to_unique_subspaces(
+    U: torch.Tensor,
+    A: torch.Tensor
+) -> torch.Tensor:
+    batch, K, dim = U.shape
+    # (batch, dim*dim)
+    # 2) form a skew-symmetric S(x)
+    S = A - A.transpose(-1,-2)             # (batch, dim, dim)
+    I = torch.eye(dim, device=U.device).unsqueeze(0)  # (1,dim,dim)
+
+    # 3) Cayley transform per-sample
+    #    Q(x) = (I - S)^{-1}(I + S)
+    Q = torch.linalg.solve(I - S, I + S)           # (batch, dim, dim)
+
+    # 4) slice into K disjoint blocks and project each expert
+    dsub = dim // U.shape[1]
+    V = []
+    for i in range(U.shape[1]):
+        Bi = Q[:, :, i*dsub:(i+1)*dsub]            # (batch, dim, dsub)
+        ui = U[:, i].unsqueeze(-1)                 # (batch, dim, 1)
+        coords = Bi.transpose(-1,-2) @ ui          # (batch, dsub, 1)
+        vi = Bi @ coords                           # (batch, dim, 1)
+        V.append(vi.squeeze(-1))                   # (batch, dim)
+    V = torch.stack(V, dim=1)                     # (batch, K, dim)
+    return V
 
 
 def project_to_unique_subspaces(
