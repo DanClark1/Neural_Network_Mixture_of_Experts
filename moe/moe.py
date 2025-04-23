@@ -42,7 +42,7 @@ class MixtureOfExperts(nn.Module):
                 nn.Linear(32, expert_outputs.shape[2]**2)
             ).to('cuda')
         
-        torch.nn.init.xavier_uniform(self.net.weight)
+        torch.nn.init.xavier_uniform(self.net)
 
 
         
