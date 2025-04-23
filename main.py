@@ -7,8 +7,7 @@ from moe import MixtureOfExperts, MoETrainer
 import wandb
 
 
-def main():
-    seed = 2
+def main(seed=2):
     torch.manual_seed(seed)
     np.random.seed(seed)
     torch.random.manual_seed(seed)
@@ -156,8 +155,13 @@ def main():
     # print("Expert Assignments:", expert_assignments.numpy())
     test_loss = trainer.evaluate(test_loader)
     print("Test Loss:", test_loss)
+    return test_loss
 
 
 
 if __name__ == "__main__":
-    main()
+    loss = 0
+    for i in range(10):
+        loss += main(i)
+
+    print("Average Test Loss:", loss / 10)
