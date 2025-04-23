@@ -24,7 +24,7 @@ class MixtureOfExperts(nn.Module):
         # Initialize tracking metrics
         self.register_buffer('expert_utilization', torch.zeros(num_experts))
         self.total_forward_passes = 0
-        self.projection_martrix = None
+        self.net = None
     
     def forward(self, x):
 
@@ -35,7 +35,7 @@ class MixtureOfExperts(nn.Module):
         # Shape: [num_experts, batch_size, output_dim]
 
 
-        if self.projection_martrix is None:
+        if self.net is None:
             self.net = nn.Sequential(
                 nn.Linear(x.shape[-1], 32),
                 nn.ReLU(),
