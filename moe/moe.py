@@ -151,7 +151,6 @@ def batch_project_to_unique_subspaces(
     V = torch.stack(V, dim=1)                     # (batch, K, dim)
     return V
 
-
 def project_to_unique_subspaces(
     U: torch.Tensor,
     A: torch.Tensor
@@ -169,10 +168,10 @@ def project_to_unique_subspaces(
     sizes = [(base + 1) if i < rem else base for i in range(K)]
     starts = [0] + list(torch.cumsum(torch.tensor(sizes), 0).tolist())
 
-
-    A = A.to('cpu')
-    Q, R = torch.linalg.qr(A, mode='complete')  # (dim, dim), (dim, dim)
-    Q = Q.to('cuda')
+    # build Cayley Q as before
+    S = A - A.t()
+    I = torch.eye(dim, device=A.device, dtype=A.dtype)
+    Q = torch.linalg.solve(I - S, I + S)  # (dim, dim)
 
     V = torch.zeros_like(U)
     for i in range(K):
@@ -182,6 +181,7 @@ def project_to_unique_subspaces(
         coords = ui @ Bi         # → (batch, sizes[i])
         V[:, i] = coords @ Bi.t()# → (batch, dim)
     return V
+
 
 
 
