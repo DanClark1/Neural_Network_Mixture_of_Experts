@@ -16,7 +16,7 @@ def main(seed=2):
     torch.backends.cudnn.benchmark = False
 
     print('hello')
-    wandb.init(project='simple_moe')
+    # wandb.init(project='simple_moe')
     # Create some synthetic data
     def generate_synthetic_data(num_samples=1000):
         # Create data with different patterns for experts to specialize in
@@ -80,12 +80,12 @@ def main(seed=2):
         # Record training loss
         train_loss = sum(epoch_losses) / len(epoch_losses)
         train_losses.append(train_loss)
-        wandb.log({"train_loss": train_loss}, step=epoch, commit=False)
+        # wandb.log({"train_loss": train_loss}, step=epoch, commit=False)
         
         # Validation
         val_loss = trainer.evaluate(val_loader)
         val_losses.append(val_loss)
-        wandb.log({"val_loss": val_loss}, step=epoch)
+        # wandb.log({"val_loss": val_loss}, step=epoch)
         
         # Record expert utilization
         expert_utilization_history.append(
