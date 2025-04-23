@@ -66,6 +66,7 @@ class MixtureOfExperts(nn.Module):
         # Shape: [batch_size, num_experts, output_dim]
 
         projection_matrix = self.net(x).view(batch_size, expert_outputs.shape[2], expert_outputs.shape[2])
+        projection_matrix = torch.random_like(projection_matrix, device=x.device)
         expert_outputs = batch_project_to_unique_subspaces(
             expert_outputs,
             projection_matrix
