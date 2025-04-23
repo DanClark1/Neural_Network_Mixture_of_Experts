@@ -1,5 +1,9 @@
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
+import datetime
+import os
+import numpy as np
 
 class MoETrainer:
     def __init__(self, model, optimizer, task_loss_fn, load_balance_coef=0.1):
@@ -38,19 +42,61 @@ class MoETrainer:
             'total_loss': total_loss.item()
         }
     
-    def evaluate(self, val_loader):
+    def evaluate(self, val_loader, record=False):
         self.model.eval()
         total_loss = 0
         num_batches = 0
         
         with torch.no_grad():
+            Z_full = []
             for x, y in val_loader:
                 x = x.to('cuda')
                 y = y.to('cuda')
-                outputs, _ = self.model(x)
+                outputs, *_ = self.model(x, record=record)
+                if record:
+                    _, Z = _
+                    Z_full.append(Z)
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1
+
+        if record:
+            Z_full = torch.cat(Z_full, dim=0)
+            out_root = '/app/save_dir/'
+            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            out_dir = os.path.join(out_root, ts)
+            os.makedirs(out_dir, exist_ok=True)
+
+            # 2) center and SVD
+            Zc = Z - Z.mean(axis=0, keepdims=True)
+            U, S, Vt = np.linalg.svd(Zc, full_matrices=False)
+
+            # 3) scree plot
+            plt.figure()
+            plt.plot(S, marker='o')
+            plt.yscale('log')
+            plt.xlabel("Component index")
+            plt.ylabel("Singular value (log scale)")
+            plt.title("Scree Plot of Singular Values")
+            plt.grid(True)
+            plt.tight_layout()
+            plt.savefig(os.path.join(out_dir, "scree_plot.png"))
+            plt.close()
+
+            # 4) cumulative explained variance
+            explained = S**2
+            cumul = np.cumsum(explained) / np.sum(explained)
+            plt.figure()
+            plt.plot(cumul, marker='o')
+            plt.xlabel("Number of components")
+            plt.ylabel("Cumulative explained variance")
+            plt.title("Cumulative Explained Variance")
+            plt.grid(True)
+            plt.tight_layout()
+            plt.savefig(os.path.join(out_dir, "cumulative_explained_variance.png"))
+            plt.close()
+
+
         
         self.model.train()
         return total_loss / num_batches

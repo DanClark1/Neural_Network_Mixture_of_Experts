@@ -65,7 +65,7 @@ def main(seed=2):
     )
 
     # Training loop
-    num_epochs = 200
+    num_epochs = 50
     train_losses = []
     val_losses = []
     expert_utilization_history = []
@@ -153,15 +153,12 @@ def main(seed=2):
     # print("Input Shape:", test_x.shape)
     # #print("Output Shape:", predictions.shape)
     # print("Expert Assignments:", expert_assignments.numpy())
-    test_loss = trainer.evaluate(test_loader)
+    test_loss = trainer.evaluate(test_loader, record=True)
     print("Test Loss:", test_loss)
     return test_loss
 
 
 
 if __name__ == "__main__":
-    loss = 0
-    for i in range(3):
-        loss += main(i)
+    main()
 
-    print("Average Test Loss:", loss / 3)

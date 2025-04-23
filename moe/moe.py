@@ -26,7 +26,7 @@ class MixtureOfExperts(nn.Module):
         self.total_forward_passes = 0
         self.net = None
     
-    def forward(self, x):
+    def forward(self, x, record=False):
 
         batch_size = x.shape[0]
         
@@ -86,6 +86,8 @@ class MixtureOfExperts(nn.Module):
         # Apply final output layer
         final_output = self.output_layer(combined_output)
         
+        if record:
+            return final_output, cosine_loss, combined_output
         return final_output, cosine_loss
     
     def get_expert_utilization_rates(self):
