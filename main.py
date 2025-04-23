@@ -36,12 +36,15 @@ def main():
     # Generate data
     X_train, y_train = generate_synthetic_data(1000)
     X_val, y_val = generate_synthetic_data(200)
+    x_test, y_test = generate_synthetic_data(200)
 
     # Create data loaders
     train_dataset = TensorDataset(X_train, y_train)
     val_dataset = TensorDataset(X_val, y_val)
+    test_dataset = TensorDataset(x_test, y_test)
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32)
+    test_loader = DataLoader(test_dataset, batch_size=32)
 
     # Initialize model
     model = MixtureOfExperts(
@@ -145,12 +148,16 @@ def main():
         return output, primary_experts
 
     # Test on some samples
-    test_x = X_val[:5]
-    predictions, expert_assignments = test_model_inference(model, test_x)
-    print("\nTest Predictions:")
-    print("Input Shape:", test_x.shape)
-    #print("Output Shape:", predictions.shape)
-    print("Expert Assignments:", expert_assignments.numpy())
+    # test_x = X_val[:5]
+    # predictions, expert_assignments = test_model_inference(model, test_x)
+    # print("\nTest Predictions:")
+    # print("Input Shape:", test_x.shape)
+    # #print("Output Shape:", predictions.shape)
+    # print("Expert Assignments:", expert_assignments.numpy())
+    test_loss = trainer.evaluate(test_loader)
+    print("Test Loss:", test_loss)
+
+
 
 if __name__ == "__main__":
     main()
