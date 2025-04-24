@@ -86,8 +86,12 @@ class MixtureOfExperts(nn.Module):
         #     expert_outputs,
         #     self.projection_martrix
         # )
+        # expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
 
-        #cosine_loss = calculate_cosine_loss(expert_outputs)
+        cosine_loss = calculate_cosine_loss(expert_outputs)
+        lambda_loss = calculate_lambda_max_loss(expert_outputs)
+        print('cosine loss', cosine_loss)
+        print('lambda loss', lambda_loss)
 
         # expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
         # projected_expert_outputs[:, -1, :] = expert_outputs[:, -1, :]
@@ -244,161 +248,40 @@ def calculate_cosine_loss(moe_outp):
 
 
 
+def calculate_lambda_max_loss(moe_outp):      
+        # (batch_positions, top_k, dim) 
+        # shapes and dims
+        batch_size = moe_outp.shape[0]
+        dim = moe_outp.shape[-1]
+        device = moe_outp.device
 
+        clients_tensor = moe_outp.swapaxes(-1, -2).contiguous()
 
-def torch_qr(a, mode='complete', out=None, gram='classical'):
-    """
-    Due to a bug in MAGMA, qr on cuda is super slow for small matrices. 
-    Therefore, this step must be performed on the cpu.
-   
+        if torch.isnan(clients_tensor).any():
+            raise ValueError(f"NaNs detected in clients_tensor before normalization.")
 
-    This function aims to provide a temporary relief for using 
-    torch.linalg.qr on GPU by implementing a Gram-Schmidt process. 
-    
-    Note: This implementation does not support backward propagation, and 
-          only supports the 'complete' mode.
-    
-    See the following regarding this Bug:
-        https://github.com/pytorch/pytorch/issues/22573
-        https://github.com/cornellius-gp/gpytorch/pull/1224
-        
-    The input arguments, other than 'gram', follow the PyTorch standard. 
-    See the following for their definition:
-        https://pytorch.org/docs/stable/generated/torch.linalg.qr.html
-        
-    Parameters
-    ----------
-    a: (torch.tensor) the input tensor. Must have a shape of 
-        (*mb_dims, dim, dim), where mb_dims shows the batch 
-        dimensions.
-
-    mode: (str) Either 'complete' or 'reduced'. This current 
-        implementation only supports the former.
-        
-    out: (None or torch.tensor) The output tensor for the Q matrix. 
-        If provided, must have the same shape as a.
-        
-    gram: (str) The Gram-Schmidt process variant. 
-    
-        * The classical variant makes O(dim) calls to CUDA 
-          and can be more efficient. 
-          
-        * The modified variant can be slightly more accurate, 
-          but makes CUDA O(dim^2) calls and thus is less efficient.
-          
-          See Section 14.2 of "Numerical Linear Algebra with Applications" 
-          by William Ford on the numerical stability of Gram-Schmidt and 
-          its modified variant:
-          
-          https://www.sciencedirect.com/science/article/abs/pii/B9780123944351000144
-          
-        * The cpu variant uses Pytorch's routine on CPU.
-          
-        This has to be one of ('classical', 'modified', 'cpu').
-        
-    Output
-    ------
-    q: (torch.tensor) The output orthonormal matrix. 
-        This should have a shape of (*mb_dims, dim, dim).
-    
-    r: (torch.tensor) The output upper triangle matrix. 
-        This should have a shape of (*mb_dims, dim, dim).
-    """
-    # First Solution: Performing the QR decomposition on CPU
-    # Issues: 
-    #    1. Pytorch may still only utilize one thread 
-    #       practically even though torch.get_num_threads() 
-    #       may be large.
-    #    2. Reliance on CPU resources.
-    if gram == 'cpu':
-        q, r = torch.linalg.qr(a.detach().cpu(), mode=mode, out=out)
-        return q.to(device=a.device), r.to(device=a.device)
-    
-    ###############################################################
-    ################## Initializing & Identifying #################
-    ###############################################################
-    assert mode == 'complete', 'reduced is not implemented yet'
-    # The bactch dimensions
-    mb_dims = a.shape[:-2]
-    # The input device
-    tch_device = a.device
-    
-    # The Data Type for performing the mathematical caculations
-    # Note: Gram-schmidt is numerically unstable. For this reason, even 
-    # when the input may be float32, we will do everything in float64.
-    tch_dtype = torch.float64
-    
-    # The QR process dimension
-    dim = a.shape[-1]
-    assert a.shape == (*mb_dims, dim, dim)
-
-    if out is None:
-        q = torch.empty(*mb_dims, dim, dim, device=tch_device, dtype=tch_dtype)
-    else:
-        q = out
-    assert q.shape == (*mb_dims, dim, dim)
-    
-    # Casting the a input to tch_dtype and using it from now on
-    a_f64 = a.to(dtype=tch_dtype)
-    a_f64.requires_grad_(a.requires_grad)
+        clients_tensor = F.normalize(clients_tensor, p=2, dim=-1)
 
     
-    ###############################################################
-    ################### Performing Gram-Schmidt ###################
-    ###############################################################
-    if gram == 'classical':
-        # Performing the classical Gram-Schmidt Process.
-        
-        # Creating a copy of a to avoid messing up the original input
-        acp = a_f64.clone()
-        assert acp.shape == (*mb_dims, dim, dim)
-        
-        for k in range(dim):
-            qk_unnorm = acp[..., :, k:k+1]
-            assert qk_unnorm.shape == (*mb_dims, dim, 1)
+        if torch.isnan(clients_tensor).any():
+            raise ValueError(f"NaNs detected in clients_tensor after normalization.")
 
-            qk = qk_unnorm / qk_unnorm.norm(dim=-2, keepdim=True)
-            assert qk.shape == (*mb_dims, dim, 1)
+        A = clients_tensor.permute(2, 1, 0).contiguous()   
+        eps = 1e-6
 
-            a_qkcomps = qk.reshape(*mb_dims, 1, dim).matmul(acp)
-            assert a_qkcomps.shape == (*mb_dims, 1, dim)
+        Q, R = torch.linalg.qr(A, mode="reduced")
 
-            # Removing the qk components from a
-            acp -= qk.matmul(a_qkcomps)
-            assert acp.shape == (*mb_dims, dim, dim)
+            
+        r_diag = R.abs().diagonal(dim1=-2, dim2=-1)           # (E, min(d,B))
+        k      = (r_diag > eps).sum(dim=1)                    # (E,)
+        cols   = torch.arange(Q.size(-1), device=Q.device)    # (d,)
+        mask   = cols[None, None, :] < k[:, None, None]       # (E, 1, d)
+        Qm     = Q * mask                                     
+        projs  = Qm @ Qm.transpose(-2, -1) 
+        avg_proj    = projs.mean(dim=0) 
 
-            q[..., :, k] = qk.reshape(*mb_dims, dim)
-    elif gram == 'modified':
-        # Performing the modified Gram-Schmidt Process.
-        for i in range(dim):
-            q[..., i] = a_f64[..., i]
-            for j in range(i):
-                err_ij = torch.einsum('...i,...i->...', q[..., j], q[..., i])
-                assert err_ij.shape == (*mb_dims,)
-                q[..., i] -=  err_ij.reshape(*mb_dims, 1) * q[..., j]
-            q[..., i] /= q[..., i].norm(dim=-1, keepdim=True)
-    else:
-        raise ValueError(f'Unknown gram={gram}')
-
-    r = q.transpose(-1, -2).matmul(a_f64)
-    assert r.shape == (*mb_dims, dim, dim)
-
-    ###############################################################
-    ######################## Final Cleanup ########################
-    ###############################################################
-    # Making sure the lower triangle of r is absolutely zero!
-    col = torch.arange(dim, device=tch_device, dtype=tch_dtype).reshape(1, dim)
-    assert col.shape == (1, dim)
-
-    row = col.reshape(dim, 1)
-    assert row.shape == (dim, 1)
+        eigvals = torch.linalg.eigvalsh(avg_proj)
+        lambda_max = eigvals[-1]
     
-    mb_ones = [1] * len(mb_dims)
-    r *= (row <= col).reshape(*mb_ones, dim, dim)
-    
-    # Casting the q and r outputs to the a input dtype for compatibility
-    q_out, r_out = q.to(dtype=a.dtype), r.to(dtype=a.dtype)
-    
-    return q_out, r_out
-
-
+        self.lambda_max_loss += lambda_max
+        self.lambda_max_normalise_weight += 1
