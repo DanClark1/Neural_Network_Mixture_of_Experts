@@ -75,7 +75,7 @@ class MixtureOfExperts(nn.Module):
 
 
         if self.projection_matrix is None:
-            self.projection_matrix = torch.zeros(expert_outputs.shape[2], expert_outputs.shape[2])
+            self.projection_matrix = torch.zeros(expert_outputs.shape[2], expert_outputs.shape[2]).to('cuda')
             torch.nn.init.kaiming_uniform_(self.projection_matrix, a=-math.sqrt(5))
 
 
