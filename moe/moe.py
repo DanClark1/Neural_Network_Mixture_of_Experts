@@ -75,7 +75,7 @@ class MixtureOfExperts(nn.Module):
 
 
         if self.projection_matrix is None:
-            self.projection_matrix = torch.nn.Parameter(batch_size, expert_outputs.shape[2], expert_outputs.shape[2])
+            self.projection_matrix = torch.zeros(batch_size, expert_outputs.shape[2], expert_outputs.shape[2])
             torch.nn.init.kaiming_uniform_(self.projection_matrix, a=-math.sqrt(5))
 
 
