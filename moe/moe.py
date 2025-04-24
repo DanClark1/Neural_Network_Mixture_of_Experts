@@ -281,5 +281,4 @@ def calculate_lambda_max_loss(moe_outp):
         eigvals = torch.linalg.eigvalsh(avg_proj)
         lambda_max = eigvals[-1]
     
-        lambda_max_loss += lambda_max
-        lambda_max_normalise_weight += 1
+        return lambda_max.mean()
