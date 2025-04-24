@@ -25,7 +25,7 @@ class MixtureOfExperts(nn.Module):
         self.register_buffer('expert_utilization', torch.zeros(num_experts))
         self.total_forward_passes = 0
         self.net = None
-        self.projection_martrix = None
+        self.projection_matrix = None
     
     def forward(self, x, record=False):
 
@@ -74,19 +74,17 @@ class MixtureOfExperts(nn.Module):
         # )
 
 
-        if self.projection_martrix is None:
-            self.projection_martrix = torch.nn.Parameter(
-                torch.zeros(expert_outputs.shape[2], expert_outputs.shape[2])
-            ).to('cuda')
-            torch.nn.init.kaiming_uniform_(self.projection_martrix, a=math.sqrt(5))
+        if self.projection_matrix is None:
+            self.projection_matrix = torch.nn.Parameter(batch_size, expert_outputs.shape[2], expert_outputs.shape[2])
+            torch.nn.init.kaiming_uniform_(self.projection_matrix, a=-math.sqrt(5))
 
 
 
-        # expert_outputs = project_to_unique_subspaces(
-        #     expert_outputs,
-        #     self.projection_martrix
-        # )
-        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+        expert_outputs = project_to_unique_subspaces(
+            expert_outputs,
+            self.projection_martrix
+        )
+        #expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
 
         cosine_loss = calculate_cosine_loss(expert_outputs)
         lambda_loss = calculate_lambda_max_loss(expert_outputs)
