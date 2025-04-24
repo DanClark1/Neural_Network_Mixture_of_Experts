@@ -17,7 +17,7 @@ class MoETrainer:
         x = x.to('cuda')
         y = y.to('cuda')
         # Forward pass
-        outputs, cosine_loss = self.model(x)
+        outputs, _, _ = self.model(x)
         gate_weights = self.model.gate(x)
         
         # Compute losses
@@ -25,8 +25,7 @@ class MoETrainer:
         load_balance_loss = self.model.compute_load_balancing_loss(gate_weights)
         
         # Combined loss
-        total_loss = task_loss + self.load_balance_coef * load_balance_loss + cosine_loss * 0.1
-        
+        total_loss = task_loss + self.load_balance_coef * load_balance_loss 
         # Backward pass
         total_loss.backward()
         
@@ -46,13 +45,16 @@ class MoETrainer:
         self.model.eval()
         total_loss = 0
         num_batches = 0
-        
+        cosine_losses = []
+        lambda_losses = []
         with torch.no_grad():
             Z_full = []
             for x, y in val_loader:
                 x = x.to('cuda')
                 y = y.to('cuda')
-                outputs, *_ = self.model(x, record=record)
+                outputs, cosine_loss, lambda_loss, *_ = self.model(x, record=record)
+                cosine_losses.append(cosine_loss)
+                lambda_losses.append(lambda_loss)
                 if record:
                     _, Z = _
                     Z_full.append(Z)
@@ -98,6 +100,10 @@ class MoETrainer:
             plt.close()
 
 
+        avg_cosine_loss = sum(cosine_losses) / len(cosine_losses)
+        avg_lambda_loss = sum(lambda_losses) / len(lambda_losses)
+        print('Average cosine loss:', avg_cosine_loss)
+        print('Average lambda loss:', avg_lambda_loss)
         
         self.model.train()
         return total_loss / num_batches

@@ -90,13 +90,11 @@ class MixtureOfExperts(nn.Module):
 
         cosine_loss = calculate_cosine_loss(expert_outputs)
         lambda_loss = calculate_lambda_max_loss(expert_outputs)
-        print('cosine loss', cosine_loss)
-        print('lambda loss', lambda_loss)
+
 
         # expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
         # projected_expert_outputs[:, -1, :] = expert_outputs[:, -1, :]
         # expert_outputs = projected_expert_outputs
-        cosine_loss = 0 
         
         # Weighted sum of expert outputs
         combined_output = (expert_outputs * gate_weights).sum(dim=1)
@@ -107,7 +105,7 @@ class MixtureOfExperts(nn.Module):
         
         if record:
             return final_output, cosine_loss, combined_output
-        return final_output, cosine_loss
+        return final_output, cosine_loss, lambda_loss
     
     def get_expert_utilization_rates(self):
         if self.total_forward_passes == 0:
@@ -283,5 +281,5 @@ def calculate_lambda_max_loss(moe_outp):
         eigvals = torch.linalg.eigvalsh(avg_proj)
         lambda_max = eigvals[-1]
     
-        self.lambda_max_loss += lambda_max
-        self.lambda_max_normalise_weight += 1
+        lambda_max_loss += lambda_max
+        lambda_max_normalise_weight += 1
