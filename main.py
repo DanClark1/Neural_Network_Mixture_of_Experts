@@ -70,6 +70,7 @@ def main(seed=2):
     val_losses = []
     expert_utilization_history = []
 
+
     for epoch in range(num_epochs):
         # Training
         epoch_losses = []
@@ -127,6 +128,8 @@ def main(seed=2):
         plt.show()
 
     # Plot results
+    print_as_hardcoded_list(train_losses)
+    print_as_hardcoded_list(val_losses)
     plot_training_curves(train_losses, val_losses)
     plot_expert_utilization(expert_utilization_history)
 
@@ -157,7 +160,21 @@ def main(seed=2):
     print("Test Loss:", test_loss)
     return test_loss
 
-
+def print_as_hardcoded_list(lst, name=None, decimals=None):
+    """
+    Prints the Python literal representation of a list.
+    Optionally rounds floats to 'decimals' places.
+    If name provided, prints 'name = [ ... ]'.
+    """
+    if decimals is not None:
+        formatted = [round(x, decimals) for x in lst]
+    else:
+        formatted = lst
+    items = ", ".join(repr(x) for x in formatted)
+    if name:
+        print(f"{name} = [{items}]")
+    else:
+        print(f"[{items}]")
 
 if __name__ == "__main__":
     num_seeds = 3
