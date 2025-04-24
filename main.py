@@ -153,12 +153,16 @@ def main(seed=2):
     # print("Input Shape:", test_x.shape)
     # #print("Output Shape:", predictions.shape)
     # print("Expert Assignments:", expert_assignments.numpy())
-    test_loss = trainer.evaluate(test_loader, record=True)
+    test_loss = trainer.evaluate(test_loader)
     print("Test Loss:", test_loss)
     return test_loss
 
 
 
 if __name__ == "__main__":
-    main()
-
+    num_seeds = 3
+    test_losses = []
+    for i in range(num_seeds):
+        test_loss = main(seed=i)
+        test_losses.append(test_loss)
+    print("Average Test Loss:", np.mean(test_losses))
