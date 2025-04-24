@@ -82,7 +82,7 @@ class MixtureOfExperts(nn.Module):
 
         expert_outputs = project_to_unique_subspaces(
             expert_outputs,
-            self.projection_martrix
+            self.projection_matrix
         )
         #expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
 
