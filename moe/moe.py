@@ -244,30 +244,21 @@ def calculate_cosine_loss(moe_outp):
 
 
 
-def calculate_lambda_max_loss(moe_outp):      
+def calculate_lambda_max_loss(x):      
         # (batch_positions, top_k, dim) 
         # shapes and dims
-        batch_size = moe_outp.shape[0]
-        dim = moe_outp.shape[-1]
-        device = moe_outp.device
+        batch_size = x.shape[0]
+        dim = x.shape[-1]
+        device = x.device
 
-        clients = moe_outp               # (batch, K, dim)
-        clients = F.normalize(clients, p=2, dim=-1)  # now normalizes each dim-vector
-        clients_tensor = clients.permute(1, 2, 0)     # (K, dim, batch)
+        x = x.permute(1, 2, 0)  # (batch_positions, dim, top_k)
 
-        if torch.isnan(clients_tensor).any():
-            raise ValueError(f"NaNs detected in clients_tensor before normalization.")
 
-        clients_tensor = F.normalize(clients_tensor, p=2, dim=-1)
+        x = F.normalize(x, p=2, dim=1)
 
-    
-        if torch.isnan(clients_tensor).any():
-            raise ValueError(f"NaNs detected in clients_tensor after normalization.")
-
-        A = clients_tensor.permute(2, 1, 0).contiguous()   
         eps = 1e-6
 
-        Q, R = torch.linalg.qr(A, mode="reduced")
+        Q, R = torch.linalg.qr(x, mode="reduced")
 
             
         r_diag = R.abs().diagonal(dim1=-2, dim2=-1)           # (E, min(d,B))
