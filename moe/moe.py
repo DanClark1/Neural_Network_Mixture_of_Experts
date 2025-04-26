@@ -80,11 +80,11 @@ class MixtureOfExperts(nn.Module):
 
 
 
-        expert_outputs = project_to_unique_subspaces(
-            expert_outputs,
-            self.projection_matrix
-        )   
-        #expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
+        # expert_outputs = project_to_unique_subspaces(
+        #     expert_outputs,
+        #     self.projection_matrix
+        # )   
+        expert_outputs = gram_schmidt_orthonormalize(expert_outputs)
 
         cosine_loss = calculate_cosine_loss(expert_outputs)
         lambda_loss = calculate_lambda_max_loss(expert_outputs)
