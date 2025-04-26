@@ -62,7 +62,7 @@ class MoETrainer:
                     for i in range(e_outputs.shape[0]):
                         # move the expert to the origin
                         origin_e_outputs = e_outputs[i] - e_outputs[i].mean(dim=0, keepdim=True)
-                        normalised_e_outputs = e_outputs[i] / torch.linalg.vector_norm(origin_e_outputs, dim=-1, keepdim=True)
+                        normalised_e_outputs = origin_e_outputs / torch.linalg.vector_norm(origin_e_outputs, dim=-1, keepdim=True)
                         list_of_e_outputs[i].append(torch.linalg.vector_norm(normalised_e_outputs.var(dim=0), dim=-1).cpu())
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
