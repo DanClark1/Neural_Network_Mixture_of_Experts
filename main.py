@@ -70,9 +70,9 @@ def main(seed=2):
     val_losses = []
     expert_utilization_history = []
 
-    test_loss = trainer.evaluate(test_loader, record=True)
+    # test_loss = trainer.evaluate(test_loader, record=True)
 
-    exit()
+    # exit()
 
     for epoch in range(num_epochs):
         # Training
@@ -105,36 +105,7 @@ def main(seed=2):
                   model.get_expert_utilization_rates().cpu().numpy().round(3))
             print("-" * 50)
 
-    # Plotting utilities
-    def plot_training_curves(train_losses, val_losses):
-        plt.figure(figsize=(10, 5))
-        plt.plot(train_losses, label='Train Loss')
-        plt.plot(val_losses, label='Validation Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Training and Validation Loss')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
 
-    def plot_expert_utilization(expert_utilization_history):
-        plt.figure(figsize=(10, 5))
-        expert_utilization_history = np.array(expert_utilization_history)
-        for i in range(model.num_experts):
-            plt.plot(expert_utilization_history[:, i], 
-                    label=f'Expert {i+1}')
-        plt.xlabel('Epoch')
-        plt.ylabel('Utilization Rate')
-        plt.title('Expert Utilization Over Time')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-
-    # Plot results
-    print_as_hardcoded_list(train_losses)
-    print_as_hardcoded_list(val_losses)
-    plot_training_curves(train_losses, val_losses)
-    plot_expert_utilization(expert_utilization_history)
 
     # Test model inference
     def test_model_inference(model, x):
@@ -187,3 +158,43 @@ if __name__ == "__main__":
     #     test_loss = main(seed=i)
     #     test_losses.append(test_loss)
     # print("Average Test Loss:", np.mean(test_losses))
+
+
+
+
+
+
+
+
+
+
+    # # Plotting utilities
+    # def plot_training_curves(train_losses, val_losses):
+    #     plt.figure(figsize=(10, 5))
+    #     plt.plot(train_losses, label='Train Loss')
+    #     plt.plot(val_losses, label='Validation Loss')
+    #     plt.xlabel('Epoch')
+    #     plt.ylabel('Loss')
+    #     plt.title('Training and Validation Loss')
+    #     plt.legend()
+    #     plt.grid(True)
+    #     plt.show()
+
+    # def plot_expert_utilization(expert_utilization_history):
+    #     plt.figure(figsize=(10, 5))
+    #     expert_utilization_history = np.array(expert_utilization_history)
+    #     for i in range(model.num_experts):
+    #         plt.plot(expert_utilization_history[:, i], 
+    #                 label=f'Expert {i+1}')
+    #     plt.xlabel('Epoch')
+    #     plt.ylabel('Utilization Rate')
+    #     plt.title('Expert Utilization Over Time')
+    #     plt.legend()
+    #     plt.grid(True)
+    #     plt.show()
+
+    # # Plot results
+    # print_as_hardcoded_list(train_losses)
+    # print_as_hardcoded_list(val_losses)
+    # plot_training_curves(train_losses, val_losses)
+    # plot_expert_utilization(expert_utilization_history)
