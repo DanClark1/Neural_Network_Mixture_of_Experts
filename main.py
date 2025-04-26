@@ -151,13 +151,13 @@ def print_as_hardcoded_list(lst, name=None, decimals=None):
         print(f"[{items}]")
 
 if __name__ == "__main__":
-    main()
-    # num_seeds = 3
-    # test_losses = []
-    # for i in range(num_seeds):
-    #     test_loss = main(seed=i)
-    #     test_losses.append(test_loss)
-    # print("Average Test Loss:", np.mean(test_losses))
+    # main()
+    num_seeds = 3
+    test_losses = []
+    for i in range(num_seeds):
+        test_loss = main(seed=i)
+        test_losses.append(test_loss)
+    print("Average Test Loss:", np.mean(test_losses))
 
 
 
