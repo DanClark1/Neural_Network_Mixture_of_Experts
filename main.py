@@ -70,6 +70,8 @@ def main(seed=2):
     val_losses = []
     expert_utilization_history = []
 
+    test_loss = trainer.evaluate(test_loader, record=True)
+    exit()
 
     for epoch in range(num_epochs):
         # Training

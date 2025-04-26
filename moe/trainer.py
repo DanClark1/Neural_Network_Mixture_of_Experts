@@ -55,6 +55,7 @@ class MoETrainer:
                 outputs, cosine_loss, lambda_loss, *expert_outputs = self.model(x, record=record)
                 cosine_losses.append(cosine_loss)
                 lambda_losses.append(lambda_loss)
+                print(expert_outputs.shape)
                 if record:
                     for i in range(len(expert_outputs)):
                         print(f'expert {i} variance:', torch.linalg.vector_norm(expert_outputs[i].var(dim=0), dim=-1).cpu().numpy())
