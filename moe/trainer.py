@@ -49,7 +49,7 @@ class MoETrainer:
         lambda_losses = []
         with torch.no_grad():
             Z_full = []
-            e_outputs = [[] for _ in range(self.model.num_experts)]
+            list_of_e_outputs = [[] for _ in range(self.model.num_experts)]
             for x, y in val_loader:
                 x = x.to('cuda')
                 y = y.to('cuda')
@@ -60,16 +60,16 @@ class MoETrainer:
                 if record:
                     e_outputs = expert_outputs[0].permute(1, 2, 0) # (dim, experts, batch) -> (experts, batch, dim)
                     for i in range(e_outputs.shape[0]):
-                        e_outputs[i].append(torch.linalg.vector_norm(e_outputs[i].var(dim=0), dim=-1).cpu().numpy())
+                        list_of_e_outputs[i].append(torch.linalg.vector_norm(e_outputs[i].var(dim=0), dim=-1).cpu().numpy())
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1
 
             if record:
-                for e in range(len(e_outputs)):
-                    print(e_outputs[e])
-                    e_outputs[e] = torch.stack(e_outputs[e]) / num_batches
-                    print(f"Expert {e} output variance: {e_outputs[e]}")            
+                for e in range(len(list_of_e_outputs)):
+                    print(list_of_e_outputs[e])
+                    list_of_e_outputs[e] = torch.stack(list_of_e_outputs[e]) / num_batches
+                    print(f"Expert {e} output variance: {list_of_e_outputs[e]}")            
 
 
         avg_cosine_loss = sum(cosine_losses) / len(cosine_losses)
