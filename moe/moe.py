@@ -180,6 +180,9 @@ def project_to_unique_subspaces(
         ui = U[:, i]             # shape (batch, dim)
         coords = ui @ Bi         # → (batch, sizes[i])
         V[:, i] = coords @ Bi.t()# → (batch, dim)
+
+    # normalise to unit length
+    norm = V.norm(dim=2, keepdim=True).clamp_min(1e-6)
     return V
 
 
