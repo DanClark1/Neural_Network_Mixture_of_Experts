@@ -55,10 +55,10 @@ class MoETrainer:
                 outputs, cosine_loss, lambda_loss, *expert_outputs = self.model(x, record=record)
                 cosine_losses.append(cosine_loss)
                 lambda_losses.append(lambda_loss)
-                print(expert_outputs[1].shape)
                 if record:
-                    for i in range(len(expert_outputs)):
-                        print(f'expert {i} variance:', torch.linalg.vector_norm(expert_outputs[i].var(dim=0), dim=-1).cpu().numpy())
+                    outputs = expert_outputs[0].permute(1, 2, 0) # (dim, experts, batch) -> (experts, batch, dim)
+                    for i in range(outputs.shape[0]):
+                        print(f'expert {i} variance:', torch.linalg.vector_norm(outputs[i].var(dim=0), dim=-1).cpu().numpy())
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1
