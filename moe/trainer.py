@@ -65,7 +65,7 @@ class MoETrainer:
                 total_loss += loss.item()
                 num_batches += 1
 
-            for e in range(e_outputs):
+            for e in range(len(e_outputs)):
                 e_outputs[e] = torch.stack(e_outputs[e], dim=0).mean(dim=0)
                 print(f"Expert {e} output variance: {e_outputs[e]}")            
 
