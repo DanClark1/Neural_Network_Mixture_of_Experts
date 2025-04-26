@@ -52,7 +52,7 @@ class MoETrainer:
             for x, y in val_loader:
                 x = x.to('cuda')
                 y = y.to('cuda')
-                outputs, cosine_loss, lambda_loss, expert_outputs = self.model(x, record=record)
+                outputs, cosine_loss, lambda_loss, *expert_outputs = self.model(x, record=record)
                 cosine_losses.append(cosine_loss)
                 lambda_losses.append(lambda_loss)
                 if record:
