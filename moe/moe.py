@@ -183,7 +183,7 @@ def project_to_unique_subspaces(
 
     # normalise to unit length
     norm = V.norm(dim=2, keepdim=True).clamp_min(1e-6)
-    return norm
+    return V / norm
 
 
 
