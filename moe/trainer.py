@@ -66,7 +66,7 @@ class MoETrainer:
                 num_batches += 1
 
             for e in range(len(e_outputs)):
-                e_outputs[e] = e_outputs[e] / num_batches
+                e_outputs[e] = torch.stack(e_outputs[e]) / num_batches
                 print(f"Expert {e} output variance: {e_outputs[e]}")            
 
 
