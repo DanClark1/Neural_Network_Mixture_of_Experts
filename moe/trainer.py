@@ -68,7 +68,7 @@ class MoETrainer:
             if record:
                 for e in range(len(list_of_e_outputs)):
                     print(list_of_e_outputs[e])
-                    list_of_e_outputs[e] = torch.stack(list_of_e_outputs[e]) / num_batches
+                    list_of_e_outputs[e] = torch.sum(torch.stack(list_of_e_outputs[e])) / num_batches
                     print(f"Expert {e} output variance: {list_of_e_outputs[e]}")            
 
 
