@@ -52,12 +52,12 @@ class MoETrainer:
             for x, y in val_loader:
                 x = x.to('cuda')
                 y = y.to('cuda')
-                outputs, cosine_loss, lambda_loss, *_ = self.model(x, record=record)
+                outputs, cosine_loss, lambda_loss, expert_outputs = self.model(x, record=record)
                 cosine_losses.append(cosine_loss)
                 lambda_losses.append(lambda_loss)
                 if record:
-                    _, Z = _
-                    Z_full.append(Z)
+                    for i in range(len(expert_outputs)):
+                        print(f'expert {i} variance:', expert_outputs[i].var(dim=0).cpu().numpy())
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1

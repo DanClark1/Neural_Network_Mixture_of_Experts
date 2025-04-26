@@ -102,7 +102,7 @@ class MixtureOfExperts(nn.Module):
         final_output = self.output_layer(combined_output)
         
         if record:
-            return final_output, cosine_loss, combined_output
+            return final_output, cosine_loss, lambda_loss, expert_outputs
         return final_output, cosine_loss, lambda_loss
     
     def get_expert_utilization_rates(self):

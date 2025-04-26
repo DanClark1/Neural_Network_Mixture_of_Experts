@@ -156,7 +156,7 @@ def main(seed=2):
     # print("Input Shape:", test_x.shape)
     # #print("Output Shape:", predictions.shape)
     # print("Expert Assignments:", expert_assignments.numpy())
-    test_loss = trainer.evaluate(test_loader)
+    test_loss = trainer.evaluate(test_loader, record=True)
     print("Test Loss:", test_loss)
     return test_loss
 
@@ -177,9 +177,10 @@ def print_as_hardcoded_list(lst, name=None, decimals=None):
         print(f"[{items}]")
 
 if __name__ == "__main__":
-    num_seeds = 3
-    test_losses = []
-    for i in range(num_seeds):
-        test_loss = main(seed=i)
-        test_losses.append(test_loss)
-    print("Average Test Loss:", np.mean(test_losses))
+    main()
+    # num_seeds = 3
+    # test_losses = []
+    # for i in range(num_seeds):
+    #     test_loss = main(seed=i)
+    #     test_losses.append(test_loss)
+    # print("Average Test Loss:", np.mean(test_losses))
