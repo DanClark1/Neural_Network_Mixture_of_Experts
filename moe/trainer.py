@@ -60,7 +60,7 @@ class MoETrainer:
                 if record:
                     e_outputs = expert_outputs[0].permute(1, 2, 0) # (dim, experts, batch) -> (experts, batch, dim)
                     for i in range(e_outputs.shape[0]):
-                        list_of_e_outputs[i].append(torch.linalg.vector_norm(e_outputs[i].var(dim=0), dim=-1).cpu().numpy())
+                        list_of_e_outputs[i].append(torch.linalg.vector_norm(e_outputs[i].var(dim=0), dim=-1).cpu())
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1
