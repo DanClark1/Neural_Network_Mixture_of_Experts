@@ -65,10 +65,11 @@ class MoETrainer:
                 total_loss += loss.item()
                 num_batches += 1
 
-            for e in range(len(e_outputs)):
-                print(e_outputs[e])
-                e_outputs[e] = torch.stack(e_outputs[e]) / num_batches
-                print(f"Expert {e} output variance: {e_outputs[e]}")            
+            if record:
+                for e in range(len(e_outputs)):
+                    print(e_outputs[e])
+                    e_outputs[e] = torch.stack(e_outputs[e]) / num_batches
+                    print(f"Expert {e} output variance: {e_outputs[e]}")            
 
 
         avg_cosine_loss = sum(cosine_losses) / len(cosine_losses)
