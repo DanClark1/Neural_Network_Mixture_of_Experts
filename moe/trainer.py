@@ -57,48 +57,10 @@ class MoETrainer:
                 lambda_losses.append(lambda_loss)
                 if record:
                     for i in range(len(expert_outputs)):
-                        print(f'expert {i} variance:', expert_outputs[i].var(dim=0).cpu().numpy())
+                        print(f'expert {i} variance:', torch.linalg.vector_norm(expert_outputs[i].var(dim=0), dim=-1).cpu().numpy())
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1
-
-        if record:
-            #Z_full = torch.cat(Z_full, dim=0).cpu().numpy()
-            Z_full  = Z.cpu().numpy()
-            out_root = '/app/save_dir/'
-            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            out_dir = os.path.join(out_root, ts)
-            os.makedirs(out_dir, exist_ok=True)
-
-            # 2) center and SVD
-            Zc = Z_full - Z_full.mean(axis=0, keepdims=True)
-            U, S, Vt = np.linalg.svd(Zc, full_matrices=False)
-
-            # 3) scree plot
-            plt.figure()
-            plt.plot(S, marker='o')
-            plt.yscale('log')
-            plt.xlabel("Component index")
-            plt.ylabel("Singular value (log scale)")
-            plt.title("Scree Plot of Singular Values")
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig(os.path.join(out_dir, "scree_plot.png"))
-            plt.close()
-
-            # 4) cumulative explained variance
-            explained = S**2
-            cumul = np.cumsum(explained) / np.sum(explained)
-            plt.figure()
-            plt.plot(cumul, marker='o')
-            plt.xlabel("Number of components")
-            plt.ylabel("Cumulative explained variance")
-            plt.title("Cumulative Explained Variance")
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig(os.path.join(out_dir, "cumulative_explained_variance.png"))
-            plt.close()
-
 
         avg_cosine_loss = sum(cosine_losses) / len(cosine_losses)
         avg_lambda_loss = sum(lambda_losses) / len(lambda_losses)
