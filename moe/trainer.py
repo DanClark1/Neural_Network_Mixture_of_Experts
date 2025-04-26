@@ -61,9 +61,18 @@ class MoETrainer:
                     e_outputs = expert_outputs[0].permute(1, 2, 0) # (dim, experts, batch) -> (experts, batch, dim)
                     for i in range(e_outputs.shape[0]):
                         # move the expert to the origin
-                        origin_e_outputs = e_outputs[i] - e_outputs[i].mean(dim=0, keepdim=True)
-                        normalised_e_outputs = origin_e_outputs / torch.linalg.vector_norm(origin_e_outputs, dim=-1, keepdim=True)
-                        list_of_e_outputs[i].append(torch.linalg.vector_norm(normalised_e_outputs.var(dim=0), dim=-1).cpu())
+                        X = e_outputs[i]
+                        X_norm = X / torch.linalg.norm(X, dim=-1, keepdim=True)
+                        mean = X_norm.mean(dim=0, keepdim=True)
+                        X_centered = X_norm - mean
+                        cov = (X_centered.T @ X_centered) / (X_norm.shape[0] - 1)
+                        sign, logabsdet = torch.linalg.slogdet(cov)
+                        gen_var = sign * torch.exp(logabsdet)
+                        list_of_e_outputs[i].append(gen_var.cpu())
+
+
+
+
                 loss = self.task_loss_fn(outputs, y)
                 total_loss += loss.item()
                 num_batches += 1
